@@ -1,12 +1,15 @@
 const Router = require("express");
 const router = new Router();
 
-const DepartmentsController = require("../controller/departments.controller")
+const authMiddleWare = require("../middleware/auth.middleware");
+const roleCheckerMiddleWare = require("../middleware/roleChecker.middleware");
+const DepartmentsController = require("../controller/departments.controller");
 
-router.post("/departments", DepartmentsController.createDepartment);
-router.get("/departments", DepartmentsController.getDepartments);
-router.get("/departments/:id", DepartmentsController.getOneDepartment);
-router.put("/departments", DepartmentsController.changeDepartment);
-router.delete("/departments/:id ", DepartmentsController.deleteDepartment);
+router.get("/departments", authMiddleWare, DepartmentsController.getDepartments);
+router.get("/departments/:id", authMiddleWare, DepartmentsController.getOneDepartment);
+
+router.post("/departments", authMiddleWare, roleCheckerMiddleWare, DepartmentsController.createDepartment);
+router.put("/departments/:id", authMiddleWare, roleCheckerMiddleWare, DepartmentsController.changeDepartment);
+router.delete("/departments/:id ", authMiddleWare, roleCheckerMiddleWare, DepartmentsController.deleteDepartment);
 
 module.exports = router

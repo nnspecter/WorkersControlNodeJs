@@ -1,10 +1,21 @@
 const db = require('../db');
+const bcrypt = require('bcryptjs');
 
 class UsersController {
     async createUser(req, res){
         try{
             const { email, password, role, full_name, position, department_id } = req.body;
-    
+
+            const existingUser = await db.query(
+                "SELECT * FROM users WHERE email = $1", 
+                [email]
+            );
+            if (existingUser.rows.length > 0) {
+                return res.status(400).json({ message: "Пользователь с таким email уже существует" });
+            }
+
+            const hashPassword = await bcrypt.hashSync(password, 10);
+
             if(department_id){
                 const findDepartment = await db.query("SELECT * FROM departments WHERE id = $1", [department_id]);
                 if(findDepartment.rows.length === 0){
@@ -13,8 +24,8 @@ class UsersController {
             }
     
             const newPerson = await db.query(
-                "INSERT INTO users (email, password, role, full_name, position, department_id) values ($1, $2, $3, $4, $5, $6) RETURNING *",
-                [email, password, role, full_name, position, department_id]
+                "INSERT INTO users (email, password, role, full_name, position, department_id) values ($1, $2, $3, $4, $5, $6) RETURNING id, email, role, full_name, position, department_id",
+                [email, hashPassword, role, full_name, position, department_id]
             );
             return res.status(201).json(newPerson.rows[0]);
         }
@@ -25,7 +36,7 @@ class UsersController {
 
     async getUsers(req, res){
         try{
-            const allUsers = await db.query("SELECT * FROM users");
+            const allUsers = await db.query("SELECT id, email, role, full_name, position, department_id FROM users");
             return res.json(allUsers.rows);
         }
         catch(error){
@@ -57,10 +68,10 @@ class UsersController {
                     return res.status(404).json({message: "Департамента не существует"})
                 } 
             }
-
+            const hashPassword = await bcrypt.hashSync(password, 10);
             const updatedUser = await db.query(
-                "UPDATE users SET (email, password, role, full_name, position, department_id) = ($2, $3, $4, $5, $6, $7) WHERE id = $1 RETURNING *",
-                [id, email, password, role, full_name, position, department_id]
+                "UPDATE users SET (email, password, role, full_name, position, department_id) = ($2, $3, $4, $5, $6, $7) WHERE id = $1 RETURNING id, email, role, full_name, position, department_id",
+                [id, email, hashPassword, role, full_name, position, department_id]
             ); 
             if(updatedUser.rows.length === 0){
                 return res.status(404).json({ message: `Пользователь c id=${id} не найден` });

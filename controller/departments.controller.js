@@ -4,9 +4,16 @@ class DepartmentController {
     async createDepartment(req, res){
         try{
             const { name } = req.body;
-
             if (!name) {
                 return res.status(400).json({ message: "Укажите название департамента" });
+            }
+
+            const existingDepartment = await db.query(
+                "SELECT * FROM departments WHERE name = $1", 
+                [name]
+            );
+            if (existingDepartment.rows.length > 0) {
+                return res.status(400).json({ message: "Департамент с таким названием уже существует" });
             }
 
             const newDepartment = await db.query(" INSERT INTO departments (name) values ($1) RETURNING *", [name]);
