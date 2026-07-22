@@ -4,7 +4,7 @@ class DepartmentController {
     async createDepartment(req, res){
         try{
             const { name } = req.body;
-            if (!name) {
+            if (!name || !name.trim()) {
                 return res.status(400).json({ message: "Укажите название департамента" });
             }
 
@@ -54,8 +54,20 @@ class DepartmentController {
         try{
             const { id } = req.params;
             const { name } = req.body;
+
+            if (!name || !name.trim()) {
+                return res.status(400).json({ message: "Укажите название департамента" });
+            }
+
+            const existingDepartment = await db.query(
+                "SELECT id FROM departments WHERE name = $1 AND id != $2", 
+                [name, id]
+            );
+            if (existingDepartment.rows.length > 0) {
+                return res.status(400).json({ message: "Департамент с таким названием уже существует" });
+            }
+
             const updatedDepartment = await db.query("UPDATE departments SET name = $2 WHERE id = $1 RETURNING *", [id, name])
-            
             if(updatedDepartment.rows.length === 0){
                 return res.status(404).json({message: `Департамент с id= ${id}  не найден`})
             }
@@ -82,7 +94,12 @@ class DepartmentController {
             });
         }
         catch(error){
-            return res.status(500).json({message: "Ошибка сервера", error: error.message})
+            if (error.code === '23503') {
+                return res.status(400).json({ 
+                    message: "Невозможно удалить департамент: к нему привязаны сотрудники" 
+                });
+            }
+            return res.status(500).json({message: "Ошибка сервера", error: error.message});
         }
     }
 

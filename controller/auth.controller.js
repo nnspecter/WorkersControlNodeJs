@@ -18,13 +18,16 @@ class AuthController{
         try{
 
             const { email, password, role, full_name, position, department_id } = req.body;
-    
+            
             const candidate = await db.query("SELECT * FROM users WHERE email = $1", [email]);    
             if (candidate.rows.length > 0) {
                 return res.status(400).json({ message: "Пользователь с таким email уже существует" });
             }
     
-            const hashPassword = await bcrypt.hashSync(password, 10);
+            if (!password || password.length < 8) {
+                return res.status(400).json({ message: "Пароль должен содержать минимум 8 символов" });
+            }
+            const hashPassword = await bcrypt.hash(password, 10);
     
             if (department_id) {
                 const findDepartment = await db.query("SELECT * FROM departments WHERE id = $1", [department_id]);
@@ -62,14 +65,18 @@ class AuthController{
         try {
             const { email, password } = req.body;
 
-            const user = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-            if (user.rows.length === 0) {
-                return res.status(400).json({ message: `Пользователь ${email} не найден` });
+            if (!password || password.length < 8) {
+                return res.status(400).json({ message: "Пароль должен содержать минимум 8 символов" });
             }
 
-            const validPassword = bcrypt.compareSync(password, user.rows[0].password);
+            const user = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+            if (user.rows.length === 0) {
+                return res.status(400).json({ message: `Неверный email или пароль` });
+            }
+
+            const validPassword = await bcrypt.compare(password, user.rows[0].password);
             if (!validPassword) {
-                return res.status(400).json({ message: "Введен неверный пароль" });
+                return res.status(400).json({ message: "Неверный email или пароль" });
             }
 
             const token = generateAccessToken(
