@@ -9,6 +9,6 @@ router.get("/activities", authMiddleWare, ActivitiesController.getActivities);
 router.get("/activities/:id", authMiddleWare, ActivitiesController.getOneActivity);
 
 router.post("/activities", authMiddleWare, ActivitiesController.createActivity);
-router.delete("/activities/:id", authMiddleWare, roleCheckerMiddleWare, ActivitiesController.deleteDepartment);
+router.delete("/activities/:id", authMiddleWare, roleCheckerMiddleWare, ActivitiesController.deleteActivity);
 
 module.exports = router
