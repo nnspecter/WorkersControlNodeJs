@@ -10,6 +10,6 @@ router.get("/departments/:id", authMiddleWare, DepartmentsController.getOneDepar
 
 router.post("/departments", authMiddleWare, roleCheckerMiddleWare, DepartmentsController.createDepartment);
 router.put("/departments/:id", authMiddleWare, roleCheckerMiddleWare, DepartmentsController.changeDepartment);
-router.delete("/departments/:id ", authMiddleWare, roleCheckerMiddleWare, DepartmentsController.deleteDepartment);
+router.delete("/departments/:id", authMiddleWare, roleCheckerMiddleWare, DepartmentsController.deleteDepartment);
 
 module.exports = router

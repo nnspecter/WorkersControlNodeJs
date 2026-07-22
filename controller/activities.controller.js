@@ -1,4 +1,5 @@
 const db = require('../db');
+const ALLOWED_STATUSES = ['IN_PROGRESS', 'INACTIVE']; 
 
 //статус можно менять каждые полчаса, если полчаса не прошло, изменяется старая запись
 class ActivitiesController {
@@ -6,9 +7,9 @@ class ActivitiesController {
         try{
             const { id } = req.user;
             const { status } = req.body;
-
-            if (!status) {
-                return res.status(400).json({ message: "Вы не отправили статус" });
+            
+            if (!status || !ALLOWED_STATUSES.includes(status)) {
+                return res.status(400).json({ message: "Недопустимый статус" });
             }
 
             const userLastActivity = await db.query("SELECT * FROM activities WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1", [id]);
@@ -52,13 +53,13 @@ class ActivitiesController {
         try{
             const { id } = req.user;
             const { activityId } = req.params;
-            const currentActivity = await db.query("SELECT * FROM activities WHERE user_id = $1, id = $2", [id, activityId]);
+            const currentActivity = await db.query("SELECT * FROM activities WHERE user_id = $1 AND id = $2", [id, activityId]);
         
             if(currentActivity.rows.length === 0 ){
                 return res.status(404).json({message: "Запись не найдена"});
             };
 
-            return res.json(currentDepartment.rows[0]);
+            return res.json(currentActivity.rows[0]);
         }
         catch(error){
             return res.status(500).json({message: "Ошибка сервера", error: error.message})
@@ -69,6 +70,7 @@ class ActivitiesController {
     async deleteActivity(req, res){
         try{
             const { id } = req.params;
+
             const deletedActivity = await db.query("DELETE FROM activities WHERE id = $1 RETURNING *", [id]);
 
             if(deletedActivity.rows.length === 0){
@@ -77,7 +79,7 @@ class ActivitiesController {
 
             return res.json({ 
                 message: "Активность удалена", 
-                department: deletedDepartment.rows[0] 
+                data: deletedActivity.rows[0] 
             });
         }
         catch(error){

@@ -28,7 +28,7 @@ CREATE TABLE users (
 );
 
 -- 5. Создаем таблицу Activities (Активность сотрудников)
---НАСТРОЙ ON DELETE CASCADE и перепиши метод удаления юзера в user.controller
+
 CREATE TABLE activities (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,

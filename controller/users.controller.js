@@ -104,54 +104,28 @@ class UsersController {
         }
     }
 
-    async deleteUser(req, res){
-        let client;
-
-        try{
-            //пулл соединений для изоляции операции
-            client = await db.connect();
+    async deleteUser(req, res) {
+        try {
             const { id } = req.params;
 
-            await client.query("BEGIN");
-            const deletedActivities = await client.query(
-                "DELETE FROM activities WHERE user_id = $1 RETURNING *",
+            const deletedUser = await db.query(
+                "DELETE FROM users WHERE id = $1 RETURNING *", 
                 [id]
             );
-            const deletedUser = await client.query(
-                "DELETE FROM users WHERE id=$1 RETURNING *",
-                [id]
-            );
-            if(deletedUser.rows.length === 0 ){
-                await client.query("ROLLBACK");
+
+            if (deletedUser.rows.length === 0) {
                 return res.status(404).json({ message: `Пользователь c id=${id} не найден` });
             }
 
-            await client.query('COMMIT');
-
             return res.json({ 
-                message: "Пользователь успешно удален", 
-                user: deletedUser.rows[0],
-                activities: deletedActivities.rows 
+                message: "Пользователь и его активности успешно удалены", 
+                user: deletedUser.rows[0]
             });
-        }
-        catch(error){
-            if (client) {
-                try{
-                    await client.query("ROLLBACK");
-                }
-                catch(rollbackError){
-                    console.error("Ошибка при откате", rollbackError);
-                }
-            }
+
+        } catch (error) {
             return res.status(500).json({ message: "Ошибка сервера", error: error.message });
         }
-        finally{
-            if (client) {
-                client.release();
-            }
-        }
     }
-
 };
 
 module.exports = new UsersController();

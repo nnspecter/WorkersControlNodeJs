@@ -8,6 +8,6 @@ router.post("/users", authMiddleWare, roleCheckerMiddleWare, UsersController.cre
 router.get("/users", authMiddleWare, roleCheckerMiddleWare, UsersController.getUsers);
 router.get("/users/:id", authMiddleWare, roleCheckerMiddleWare, UsersController.getOneUser);
 router.put("/users/:id", authMiddleWare, roleCheckerMiddleWare, UsersController.changeUser);
-router.delete("/users/:id ", authMiddleWare, roleCheckerMiddleWare, UsersController.deleteUser);
+router.delete("/users/:id", authMiddleWare, roleCheckerMiddleWare, UsersController.deleteUser);
 
 module.exports = router
